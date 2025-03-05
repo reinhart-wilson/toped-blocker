@@ -9,6 +9,7 @@
 // @grant        none
 // ==/UserScript==
 
+// As of latest version, users are required to manually edit this array to add blocked sellers or word. Currently working on a better approach.
 const blockedSellers = ['joss sport', 'alzenolshop', 'yuntimistawa', 'yauob', 'arunika mart', 'pelangiwarnai',
                         'latar 0mbo', /2000\sStore$/i, '^\\b\\w+\\b\\s+\\b\\w+\\b\\s+\\b\\w+shop\\b$',
                        'pt dasiansejahteruuuuuu', 'pt sarungsejahteruuuuuu', 'keyla928', 'hello ztore',
