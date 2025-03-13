@@ -110,7 +110,7 @@ function addBlockFilter(element) {
     keywordBlockInput.addEventListener("change", function () {
         const input = keywordBlockInput.value.trim();
         if (input) {
-            const words = input.split(",").map(word => word.trim());
+            const words = input.split(",").map(word => word.trim().toLowerCase());
             blockedWords.push(...words); // Add new words to array
             GM_setValue("blockedWords", JSON.stringify(blockedWords)); // Save updated array
             removeProduct();
@@ -125,9 +125,9 @@ function addBlockFilter(element) {
     sellerBlockInput.addEventListener("change", function () {
         const input = sellerBlockInput.value.trim();
         if (input) {
-            const sellers = input.split(",").map(word => word.trim());
+            const sellers = input.split(",").map(word => word.trim().toLowerCase());
             blockedSellers.push(...sellers); // Add new words to array
-            GM_setValue("blockedSellers", JSON.stringify(blockedWords)); // Save updated array
+            GM_setValue("blockedSellers", JSON.stringify(blockedSellers)); // Save updated array
             removeProduct();
         }
     });
@@ -137,7 +137,7 @@ function addBlockFilter(element) {
 (function () {
     'use strict';
 
-    // Removal is triggered every set interval since Tokopedia does not show all products directly. 
+    // Removal is triggered every set interval since Tokopedia does not show all products directly.
     // WIP: should be a better approach out there. Could use the addBlockFilter fuction, but should use extra parameter(s) to work properly
     triggerFunction(removeProduct, 5, 2000);
     window.navigation.addEventListener('navigate', () => { triggerFunction(removeProduct, 3, 1000); });
