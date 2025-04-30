@@ -102,36 +102,62 @@ function addBlockFilter(element) {
     blockDiv.appendChild(blockTitleBtn);
     blockDiv.appendChild(blockBodyDiv);
 
-    // Blocked word input field
-    const keywordBlockInput = document.createElement('input');
-    keywordBlockInput.name = 'keywords';
-    keywordBlockInput.className = "css-6v0gm9 exxxdg63";
-    blockBodyDiv.append(keywordBlockInput);
-    keywordBlockInput.addEventListener("change", function () {
-        const input = keywordBlockInput.value.trim();
-        if (input) {
-            const words = input.split(",").map(word => word.trim().toLowerCase());
-            blockedWords.push(...words); // Add new words to array
-            GM_setValue("blockedWords", JSON.stringify(blockedWords)); // Save updated array
-            removeProduct();
-        }
-    });
+    // Additional containers to match the look of Tokopedia's GUI
+    const blockContainer = document.createElement('div');
+    blockContainer.className = 'css-1cb34wj';
+    blockBodyDiv.appendChild(blockContainer);
 
-    // Blocked seller input field
-    const sellerBlockInput = document.createElement('input');
-    sellerBlockInput.name = 'sellers';
-    sellerBlockInput.className = "css-6v0gm9 exxxdg63";
-    blockBodyDiv.append(sellerBlockInput);
-    sellerBlockInput.addEventListener("change", function () {
-        const input = sellerBlockInput.value.trim();
-        if (input) {
-            const sellers = input.split(",").map(word => word.trim().toLowerCase());
-            blockedSellers.push(...sellers); // Add new words to array
-            GM_setValue("blockedSellers", JSON.stringify(blockedSellers)); // Save updated array
-            removeProduct();
+    // Function to create styled text inputs matching Tokopedia's inputs' appearence
+    function createStyledInput({ name, placeholder = "", onChange }) {
+        const input = document.createElement('input');
+        input.name = name;
+        input.placeholder = placeholder;
+        input.className = "css-6v0gm9 exxxdg63";
+
+        const container = document.createElement('div');
+        container.style.borderRadius = '8px';
+        container.style.border = '1px solid var(--color-border, #E5E7E9)';
+        container.style.padding = '0px 12px';
+        container.style.margin = '8px 0px'
+        container.appendChild(input);
+
+        input.addEventListener('change', onChange);
+
+        return container;
+    }
+
+    const keywordBlockDiv = createStyledInput({
+        name: 'keywords',
+        placeholder: 'Sembunyikan Kata Kunci',
+        onChange: () => {
+            const input = keywordBlockDiv.querySelector('input').value.trim();
+            if (input) {
+                const words = input.split(',').map(word => word.trim().toLowerCase());
+                blockedWords.push(...words);
+                GM_setValue("blockedWords", JSON.stringify(blockedWords));
+                removeProduct();
+            }
         }
     });
-    element.prepend(blockDiv);
+    blockContainer.append(keywordBlockDiv);
+
+    const sellerBlockDiv = createStyledInput({
+        name: 'sellers',
+        placeholder: 'Sembunyikan Penjual',
+        onChange: () => {
+            const input = sellerBlockDiv.querySelector('input').value.trim();
+            if (input) {
+                const sellers = input.split(',').map(word => word.trim().toLowerCase());
+                blockedSellers.push(...sellers);
+                GM_setValue("blockedSellers", JSON.stringify(blockedSellers));
+                removeProduct();
+            }
+        }
+    });
+    blockContainer.append(sellerBlockDiv);
+
+    const parentElement = element;
+    parentElement.prepend(blockDiv);
 }
 
 (function () {
