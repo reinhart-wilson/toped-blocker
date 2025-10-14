@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Block Seller
 // @namespace    http://tokopedia.com/
-// @version      2024-06-13
+// @version      0.1.1
 // @description
 // @author       reinhart-wilson
 // @match        https://www.tokopedia.com/search?*
@@ -16,6 +16,7 @@ const badword = 'BLOCKED';
 const productContainerSelector = '.css-5wh65g';
 const productListContainerDataTestId = 'divSRPContentProducts';
 const productListRowContainerClass = 'css-jza1fo';
+const blockDivId = 'block-seller-filter';
 
 function removeProduct() {
 
@@ -87,6 +88,7 @@ function waitForElement(selector, callback, options = { childList: true, subtree
 // This function adds the input field filter for entering words or sellers users want to block
 function addBlockFilter(element) {
     let blockDiv = document.createElement('div');
+    blockDiv.setAttribute("id", blockDivId);
 
     // The title of the filter item
     const blockTitleBtn = document.createElement("button");
@@ -183,13 +185,19 @@ function onProdListLoad(element){
     observeProdListChange(element);
 }
 
+function onFilterLoad(element){
+    if (!document.getElementById(blockDivId)) {
+        addBlockFilter(element);
+    }
+}
+
 (function () {
     'use strict';
 
     // Adds an input UI for filtering products.
     let filterParentDivSelector = '[data-testid="cntrBlockFilter"]';
-    waitForElement(filterParentDivSelector, (element) => { addBlockFilter(element); });
-    window.navigation.addEventListener('navigate', () => { waitForElement(filterParentDivSelector, (element) => { addBlockFilter(element); }); });
+    waitForElement(filterParentDivSelector, (element) => { onFilterLoad(element); });
+    window.navigation.addEventListener('navigate', () => { waitForElement(filterParentDivSelector, (element) => { onFilterLoad(element); }); });
 
     // React to changes in DOM
     const prodListSelector = `[data-testid="${productListContainerDataTestId}"]`;
