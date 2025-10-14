@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Block Seller
 // @namespace    http://tokopedia.com/
-// @version      0.1.1
+// @version      2024-06-13
 // @description
 // @author       reinhart-wilson
 // @match        https://www.tokopedia.com/search?*
@@ -17,6 +17,7 @@ const productContainerSelector = '.css-5wh65g';
 const productListContainerDataTestId = 'divSRPContentProducts';
 const productListRowContainerClass = 'css-jza1fo';
 const blockDivId = 'block-seller-filter';
+const buttonClass = 'css-1x3ipd9-unf-chip e6yxrl1';
 
 function removeProduct() {
 
@@ -130,6 +131,18 @@ function addBlockFilter(element) {
         return container;
     }
 
+    function createStyledButton({text, onPress}){
+        const button = document.createElement('button');
+        button.innerText = text;
+        button.addEventListener('click', onPress);
+        button.className = buttonClass;
+        button.type = 'button';
+
+        button.style.marginTop = '1vh';
+
+        return button;
+    }
+
     const keywordBlockDiv = createStyledInput({
         name: 'keywords',
         placeholder: 'Sembunyikan Kata Kunci',
@@ -159,6 +172,18 @@ function addBlockFilter(element) {
         }
     });
     blockContainer.append(sellerBlockDiv);
+
+    const sellerResetButton = createStyledButton({
+        text: 'Reset Seller',
+        onPress: resetBlockedSellers
+    });
+    blockContainer.append(sellerResetButton);
+
+    const wordsResetButton = createStyledButton({
+        text: 'Reset Kata',
+        onPress: resetBlockedWords
+    });
+    blockContainer.append(wordsResetButton);
 
     const parentElement = element;
     parentElement.prepend(blockDiv);
@@ -190,6 +215,17 @@ function onFilterLoad(element){
         addBlockFilter(element);
     }
 }
+
+function resetBlockedSellers() {
+    GM_setValue("blockedSellers", JSON.stringify([]));
+    window.location.reload();
+}
+
+function resetBlockedWords() {
+    GM_setValue("blockedWords", JSON.stringify([]));
+    window.location.reload();
+}
+
 
 (function () {
     'use strict';
