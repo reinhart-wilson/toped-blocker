@@ -13,9 +13,11 @@
 const blockedSellers = JSON.parse(GM_getValue("blockedSellers", "[]"));
 const blockedWords = JSON.parse(GM_getValue("blockedWords", "[]"));
 const badword = 'BLOCKED';
+const productContainerSelector = '.css-5wh65g';
+const productListContainerDataTestId = 'divSRPContentProducts';
+const productListRowContainerClass = 'css-jza1fo';
 
 function removeProduct() {
-    const productContainerSelector = '.css-5wh65g';
 
     const sellerSpans = document.getElementsByClassName('flip');
     const sellerSpansArray = Array.from(sellerSpans);
@@ -160,17 +162,37 @@ function addBlockFilter(element) {
     parentElement.prepend(blockDiv);
 }
 
+// This function observers the addition of products in prodList, then triggers
+// the script when changes are present.
+function observeProdListChange(element){
+    const prodList = element;
+    const observerConfig = { childList: true, subtree: true };
+    const observerCallback = (mutationList, observer) => {
+        for (const mutation of mutationList) {
+            if (mutation.type === "childList") {
+                removeProduct();
+            }
+        }
+    };
+    const observer = new MutationObserver(observerCallback);
+    observer.observe(prodList, observerConfig);
+}
+
+function onProdListLoad(element){
+    removeProduct();
+    observeProdListChange(element);
+}
+
 (function () {
     'use strict';
-
-    // Removal is triggered every set interval since Tokopedia does not show all products directly.
-    // WIP: should be a better approach out there. Could use the addBlockFilter fuction, but should use extra parameter(s) to work properly
-    triggerFunction(removeProduct, 5, 2000);
-    window.navigation.addEventListener('navigate', () => { triggerFunction(removeProduct, 3, 1000); });
 
     // Adds an input UI for filtering products.
     let filterParentDivSelector = '[data-testid="cntrBlockFilter"]';
     waitForElement(filterParentDivSelector, (element) => { addBlockFilter(element); });
     window.navigation.addEventListener('navigate', () => { waitForElement(filterParentDivSelector, (element) => { addBlockFilter(element); }); });
+
+    // React to changes in DOM
+    const prodListSelector = `[data-testid="${productListContainerDataTestId}"]`;
+    waitForElement(prodListSelector, onProdListLoad);
 
 })();
