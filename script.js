@@ -5,6 +5,7 @@
 // @description
 // @author       reinhart-wilson
 // @match        https://www.tokopedia.com/search?*
+// @match        https://www.tokopedia.com/p/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=tokopedia.com
 // @require      http://userscripts-mirror.org/scripts/source/107941.user.js
 // @grant        GM_setValue
@@ -13,39 +14,62 @@
 const blockedSellers = JSON.parse(GM_getValue("blockedSellers", "[]"));
 const blockedWords = JSON.parse(GM_getValue("blockedWords", "[]"));
 const badword = 'BLOCKED';
-const productContainerSelector = '.css-5wh65g';
-const productListContainerDataTestId = 'divSRPContentProducts';
-const productListRowContainerClass = 'css-jza1fo';
+
+const productContainerSelectors = ['.css-5wh65g', '.css-bk6tzz']; 
+const sellerElementSelectors = [
+    '.flip',
+    '.css-ywdpwd'
+];
+const productNameSelectors = [
+    '[class="+tnoqZhn89+NHUA43BpiJg=="]', 
+    '.css-20kt3o'
+];
+const productListSelectors = [
+    '[data-testid="divSRPContentProducts"]',
+    '[data-testid="lstCL3ProductList"]',
+];
+
 const blockDivId = 'block-seller-filter';
 const buttonClass = 'css-1x3ipd9-unf-chip e6yxrl1';
 
 function removeProduct() {
-
-    const sellerSpans = document.getElementsByClassName('flip');
-    const sellerSpansArray = Array.from(sellerSpans);
-
-    for (const elem of sellerSpansArray) {
-        const sellerName = elem.innerText.trim().toLowerCase();
-        if (blockedSellers.includes(sellerName)) {
-            const productContainer = elem.closest(productContainerSelector);
-            productContainer.innerHTML = 'BLOCKED';
-        }
+    // --- Handle seller name blocking ---
+    for (const sellerSelector of sellerElementSelectors) {
+        const sellerElems = document.querySelectorAll(sellerSelector);
+        sellerElems.forEach(elem => {
+            const sellerName = elem.innerText.trim().toLowerCase();
+            if (blockedSellers.includes(sellerName)) {
+                const productContainer = findClosestContainer(elem);
+                if (productContainer) productContainer.innerHTML = badword;
+            }
+        });
     }
 
-    const productNameSpans = document.getElementsByClassName('_0T8-iGxMpV6NEsYEhwkqEg==');
-    const productNameSpansArray = Array.from(productNameSpans);
-
-    for (const elem of productNameSpansArray) {
-        const productName = elem.innerText.toLowerCase();
-        for (const word of blockedWords) {
-            if (productName.includes(word)) {
-                const productContainer = elem.closest(productContainerSelector);
-                productContainer.innerHTML = 'BLOCKED';
-                break; // Stop checking once a match is found
+    // --- Handle keyword blocking ---
+    for (const productNameSelector of productNameSelectors) {
+        const productElems = document.querySelectorAll(productNameSelector);
+        productElems.forEach(elem => {
+            const productName = elem.innerText.toLowerCase();
+            for (const word of blockedWords) {
+                if (productName.includes(word)) {
+                    const productContainer = findClosestContainer(elem);
+                    if (productContainer) productContainer.innerHTML = badword;
+                    break; // Stop after the first matched word
+                }
             }
-        }
+        });
     }
 }
+
+// Utility: finds the closest parent that matches any known product container class
+function findClosestContainer(element) {
+    for (const selector of productContainerSelectors) {
+        const container = element.closest(selector);
+        if (container) return container;
+    }
+    return null;
+}
+
 
 // Triggers a callback at specified interval.
 const triggerFunction = (func, times, interval) => {
@@ -85,6 +109,25 @@ function waitForElement(selector, callback, options = { childList: true, subtree
 
     observer.observe(document.body, options);
 }
+
+// modified waitForElement that waits matching element attributes instead of just one.
+function waitForAnyElement(selectors, callback, options = { childList: true, subtree: true }) {
+    console.log('Observer started');
+
+    const observer = new MutationObserver((mutations, obs) => {
+        for (const selector of selectors) {
+            const element = document.querySelector(selector);
+            if (element) {
+                callback(element);
+                obs.disconnect();
+                return;
+            }
+        }
+    });
+
+    observer.observe(document.body, options);
+}
+
 
 // This function adds the input field filter for entering words or sellers users want to block
 function addBlockFilter(element) {
@@ -231,12 +274,13 @@ function resetBlockedWords() {
     'use strict';
 
     // Adds an input UI for filtering products.
-    let filterParentDivSelector = '[data-testid="cntrBlockFilter"]';
-    waitForElement(filterParentDivSelector, (element) => { onFilterLoad(element); });
-    window.navigation.addEventListener('navigate', () => { waitForElement(filterParentDivSelector, (element) => { onFilterLoad(element); }); });
+    let filterParentDivSelectors = ['[data-testid="cntrBlockFilter"]', '.filterBlockContainer'];
+    waitForAnyElement(filterParentDivSelectors, (element) => { onFilterLoad(element); });
+    window.navigation.addEventListener('navigate', () => { waitForElement(filterParentDivSelectors, (element) => { onFilterLoad(element); }); });
 
     // React to changes in DOM
-    const prodListSelector = `[data-testid="${productListContainerDataTestId}"]`;
-    waitForElement(prodListSelector, onProdListLoad);
+    //    const prodListSelector = `[data-testid="${searchProductListContainerDataTestId}"]`;
+    //  waitForElement(prodListSelector, onProdListLoad);
+    waitForAnyElement(productListSelectors, onProdListLoad);
 
 })();
